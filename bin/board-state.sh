@@ -64,6 +64,9 @@ except ValueError:
 if not d:
     print("Server is up, but no tracker page has connected yet.")
     raise SystemExit
+last = d.get("lastToast")
+if last:
+    print(f'LAST MESSAGE SHOWN ON SCREEN: "{last}"')
 items = d.get("items") or []
 if not items:
     print("The board is EMPTY (as of the tracker's last heartbeat).")

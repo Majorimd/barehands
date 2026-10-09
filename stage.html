@@ -343,6 +343,9 @@ let SAMPLED = "";      // its frozen last result (D overlay)
 let landmarker = null, lastVideoTs = -1, frames = 0, fps = 0, lastFpsTs = performance.now();
 
 let UID = 1;
+let LAST_TOAST = "";   // mirrors the newest toast() text into /state, so an
+                        // agent with no eyes on screen can read sampler
+                        // results instead of asking a person to read numbers aloud
 
 function makeCard(def) {
   const el = document.createElement("div");
@@ -1560,6 +1563,7 @@ async function openPanel(card) {
 }
 
 function toast(msg, ms = 2500) {
+  LAST_TOAST = msg;
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.style.display = "block";
@@ -1636,8 +1640,17 @@ addEventListener("keydown", e => {
   if (e.key === "d" || e.key === "D") dbg.style.display = dbg.style.display === "block" ? "none" : "block";
   if (e.key === "c" || e.key === "C") cycleCam();
   if (e.key === "p" || e.key === "P") {
-    SAMPLER = { until: performance.now() + 4000, r: [], h8: [], h12: [], h16: [], h20: [], s: [], a: [] };
-    toast("OMNI sampler: hold the pose for 4 seconds…", 4000);
+    // the CLAP recorder (v3.9.1) was built but never wired to a key —
+    // route P to it when two hands are already on camera, since that's
+    // the only time a clap sample is possible; one hand keeps the old
+    // single-pose OMNI sampler unchanged.
+    if (Object.keys(cursors).length === 2) {
+      CLAPSAMP = { until: performance.now() + 2000, rows: [] };
+      toast("CLAP sampler: clap once in the next 2 seconds…", 2000);
+    } else {
+      SAMPLER = { until: performance.now() + 4000, r: [], h8: [], h12: [], h16: [], h20: [], s: [], a: [] };
+      toast("OMNI sampler: hold the pose for 4 seconds…", 4000);
+    }
   }
 });
 
@@ -2945,6 +2958,7 @@ function pushState(now) {
         sy: syf,
       };
     }),
+    lastToast: LAST_TOAST,
   };
   fetch("/state", { method: "POST", body: JSON.stringify(st) })
     .then(r => r.json()).then(applyCmds).catch(() => {});
