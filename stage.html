@@ -1191,7 +1191,16 @@ function applyCmds(cmds) {
                                    : makeImage(c.src, c.title);
       if (c.a === "give") give(it);
       else if (c.a === "hand") deliver(it);
-      else { it.anim = { k: "in", t: 0 }; it.el.style.opacity = "0.05"; }
+      else {
+        // Optional x/y for add_img, same 0..1 fractions and clamp as
+        // add_card, so several props can land side by side instead of
+        // stacking. Without them the old centre spot is kept.
+        if (typeof c.x === "number")
+          it.x = Math.min(0.92, Math.max(0.08, c.x)) * innerWidth;
+        if (typeof c.y === "number")
+          it.y = Math.min(0.92, Math.max(0.08, c.y)) * innerHeight;
+        it.anim = { k: "in", t: 0 }; it.el.style.opacity = "0.05";
+      }
       items.push(it);
     } else if (c.a === "add_card" && c.title) {
       // the note-throw: add_card carries an optional notes `file` —
